@@ -126,10 +126,12 @@ button.sec:hover{background:#f5f4f0}
     </button>
   </div>
 
-  <div class="section-lbl">Wil je ook weten hoe je Why doorwerkt in je bedrijf?</div>
-  <div class="door-grid">
-    <button class="door-btn" id="d-y" onclick="setDoor(true)">Ja, verbind het aan mijn bedrijf</button>
-    <button class="door-btn" id="d-n" onclick="setDoor(false)">Nee, alleen de Why is genoeg</button>
+  <div id="door-section" style="display:none">
+    <div class="section-lbl">Wil je je persoonlijke Why ook koppelen aan je bedrijf?</div>
+    <div class="door-grid">
+      <button class="door-btn" id="d-y" onclick="setDoor(true)">Ja, verbind het aan mijn bedrijf</button>
+      <button class="door-btn" id="d-n" onclick="setDoor(false)">Nee, puur persoonlijk</button>
+    </div>
   </div>
 
   <button class="pri" id="start-btn" onclick="startChat()" disabled>Start het gesprek <i class="ti ti-arrow-right"></i></button>
@@ -196,13 +198,22 @@ button.sec:hover{background:#f5f4f0}
 
 </div>
 <script>
-var mode='',door=null,hist=[],turn=0,busy=false,MAX=8;
+var mode='',door=null,hist=[],turn=0,busy=false,MAX=10;
 
 function setMode(m){
   mode=m;
   ['m-p','m-b','m-t'].forEach(function(id){document.getElementById(id).classList.remove('active')});
   var map={persoonlijk:'m-p',bedrijf:'m-b',team:'m-t'};
   document.getElementById(map[m]).classList.add('active');
+  if(m==='persoonlijk'){
+    document.getElementById('door-section').style.display='block';
+    door=null;
+    document.getElementById('d-y').classList.remove('active');
+    document.getElementById('d-n').classList.remove('active');
+  } else {
+    document.getElementById('door-section').style.display='none';
+    door=true;
+  }
   checkStart();
 }
 
@@ -214,18 +225,29 @@ function setDoor(v){
 }
 
 function checkStart(){
-  document.getElementById('start-btn').disabled=!(mode&&door!==null);
+  var ready=mode&&(mode!=='persoonlijk'||door!==null);
+  document.getElementById('start-btn').disabled=!ready;
 }
 
 function sysPrompt(){
   var modeCtx={
-    persoonlijk:'De ondernemer wil zijn of haar persoonlijke drijfveer ontdekken — wat hen als mens en ondernemer in beweging zet.',
-    bedrijf:'De ondernemer wil de drijfveer van zijn of haar bedrijf ontdekken — wat de organisatie bestaansrecht geeft voorbij het product of de dienst.',
-    team:'Een team wil hun gedeelde drijfveer ontdekken — wat hen als groep bindt en richting geeft. Vraag ook naar gedeelde momenten en wat het team trots maakt.'
+    persoonlijk:'De gebruiker wil zijn of haar persoonlijke drijfveer ontdekken — wat hen als mens en ondernemer in beweging zet. Stel vragen over persoonlijke ervaringen, momenten van trots of frustratie, en wat hen diep raakt.',
+    bedrijf:'De gebruiker vertegenwoordigt een bedrijf en wil de drijfveer van de organisatie ontdekken — wat het bedrijf bestaansrecht geeft voorbij het product of de dienst. Stel vragen over het bedrijfsverhaal, klanten, oprichtersmoment en organisatiemomenten. Niet over de persoon als privépersoon.',
+    team:'Een teamlid vertegenwoordigt een heel team en wil hun gedeelde drijfveer ontdekken. Stel vragen over gedeelde ervaringen, wat het team bindt, waar ze samen energie van krijgen en wat ze als team trots maakt. Gebruik "jullie" en "het team", niet "jij".'
   };
-  var doorCtx=door?'Na het gesprek wil de gebruiker ook weten hoe de Why doorwerkt in het bedrijf — formuleer dan ook een Hoe (hoe ze het in de praktijk brengen) en een Wat (wat ze concreet doen als bewijs van de Why).':'Na het gesprek hoef je alleen de Why te formuleren — geen Hoe of Wat nodig.';
+  var doorCtx=mode==='persoonlijk'
+    ?(door
+      ?'De gebruiker wil zijn persoonlijke Why ook koppelen aan zijn bedrijf. Vraag ook naar zakelijke ervaringen, klanten en hoe de persoonlijke drijfveer terugkomt in het werk.'
+      :'De gebruiker wil puur persoonlijk werken, los van het bedrijf. Stel vragen over persoonlijke ervaringen, relaties en levensmomenten — niet over het werk of bedrijf.')
+    :'';
 
-  return 'Je bent een warme, scherpe coach die mensen helpt hun diepste drijfveer te ontdekken.\n\nCONTEXT: '+modeCtx[mode]+'\n\n'+doorCtx+'\n\nJOUW AANPAK:\n- Stel altijd maar ÉÉN vraag per beurt, nooit meer\n- Reageer eerst kort menselijk op wat er gezegd wordt (max 1 zin erkenning)\n- Gebruik nooit de woorden: Why, drijfveer, missie, purpose, betekenis, waarden\n- Vraag altijd door op concrete verhalen, specifieke momenten en emoties\n- Als iemand algemeen blijft, vraag dan naar een concreet voorbeeld\n- Als iemand een gevoel noemt, vraag wat dat gevoel precies veroorzaakte\n- Als antwoorden over geld gaan, vraag zacht door: "Interessant — maar stel dat geld geen rol speelde, wat dan?"\n- Let op wat er tussendoor gezegd wordt — daarin zit vaak het meest waardevolle\n- Geef af en toe zachte weerstand of een verrassende invalshoek\n\nWAAR JE OP LET (onzichtbaar voor de gebruiker):\n- Energie: wat laadt deze persoon of dit team op?\n- Frustratie: waar worden ze boos of verdrietig van? (sterkste signaal)\n- Trots: welk moment noemen ze als ze echt oplichten?\n- Herhaling: welk thema komt steeds terug?\n- De bijzin: de kern zit vaak niet in het hoofdantwoord maar in wat er tussendoor glipt\n\nGESPREKSSTRUCTUUR ('+MAX+' beurten):\n- Beurt 1-2: één concreet verhaal of moment ophalen\n- Beurt 3-4: doorvragen op emotie, contrast of frustratie\n- Beurt 5-6: wat ze willen achterlaten of veranderen\n- Beurt 7: spiegelen — benoem een patroon dat je ziet\n- Beurt 8: samen toewerken naar de kern\n\nNA '+MAX+' BEURTEN: antwoord met alleen de tekst KLAAR en niets anders.\n\nOPENINGSVRAAG (twee beurten):\nBeurt 1 — begin altijd met deze ijsbreker: "Fijn dat je er bent. Waar ben je op dit moment mee bezig — in je werk of bedrijf? Vertel het gewoon zoals je het aan een vriend zou zeggen."\nBeurt 2 — reageer kort op wat ze zeggen en vraag dan: "Wat was de laatste dag waarop je met een goed gevoel naar huis ging? Wat had je gedaan?"';
+  var openings={
+    persoonlijk:'OPENINGSVRAGEN:\nBeurt 1 — begin altijd met: "Fijn dat je er bent. Vertel eens — waar ben je op dit moment mee bezig in je werk of leven? Gewoon zoals je het aan een vriend zou vertellen."\nBeurt 2 — reageer kort en vraag: "Wanneer was de laatste keer dat je ergens mee bezig was en de tijd volledig vergat? Wat deed je precies?"\nRond beurt 5-6 — doe een stap terug in de tijd: ga terug naar de jeugd van de gebruiker. Vraag naar een herinnering die ze echt kunnen beleven — een moment van trots, iets wat hen raakte, of iets wat hen dwars zat. Iets concreets, geen vaag gevoel. Verbind dit vervolgens aan het patroon dat je ziet in het huidige gesprek.',
+    bedrijf:'OPENINGSVRAGEN:\nBeurt 1 — begin altijd met: "Fijn dat je er bent. Vertel me het verhaal van jullie bedrijf — niet de pitch, maar hoe het echt begonnen is. Wat was de aanleiding?"\nBeurt 2 — reageer kort en vraag: "Wat was een moment waarop jullie bedrijf precies deed waarvoor het bedoeld was? Een klant, een project, een situatie — iets concreets dat je nog helder voor ogen staat."',
+    team:'OPENINGSVRAGEN:\nBeurt 1 — begin altijd met: "Fijn dat jullie er zijn. Waar zijn jullie als team op dit moment mee bezig — niet de to-do-lijst, maar waar zit jullie echte energie in?"\nBeurt 2 — reageer kort en vraag: "Wat was een moment als team dat jullie echt trots maakt? Iets waarbij je terugdenkt: dit is waarom we dit samen doen."'
+  };
+
+  return 'Je bent een warme, scherpe coach die mensen helpt hun diepste drijfveer te ontdekken.\n\nCONTEXT: '+modeCtx[mode]+'\n\n'+doorCtx+'\n\nJOUW AANPAK:\n- Stel altijd maar ÉÉN vraag per beurt, nooit meer\n- Reageer eerst kort menselijk op wat gezegd wordt (max 1 zin erkenning)\n- Gebruik nooit de woorden: Why, drijfveer, missie, purpose, betekenis, waarden\n- Vraag altijd door op concrete verhalen, specifieke momenten en emoties\n- Als iemand algemeen blijft: "Kun je me daar een concreet voorbeeld van geven?"\n- Als iemand een gevoel noemt: vraag wat dat gevoel precies veroorzaakte\n- Als antwoorden over geld gaan: "Interessant — maar stel dat geld geen rol speelde, wat dan?"\n- Let goed op bijzinnen — de kern zit vaak niet in het hoofdantwoord maar in wat er tussendoor glipt\n- Geef af en toe zachte weerstand: "Je zegt X, maar eerder zei je Y — hoe zit dat?"\n- Haast je NOOIT naar een conclusie. Blijf nieuwsgierig totdat je iets echt concreets en persoonlijks hoort\n- Speel met stilte: soms is "Vertel daar eens meer over" genoeg\n\nWAAR JE OP LET (onzichtbaar voor de gebruiker):\n- Energie: wat laadt deze persoon of dit team op?\n- Frustratie: waar worden ze boos of verdrietig van? (sterkste signaal)\n- Trots: welk moment noemen ze als ze echt oplichten?\n- Herhaling: welk thema komt steeds terug?\n- De bijzin: de kern zit vaak niet in het hoofdantwoord\n\nGESPREKSSTRUCTUUR ('+MAX+' beurten):\n- Beurt 1-3: één of twee concrete verhalen ophalen\n- Beurt 4-5: diep doorvragen op de emotie, het contrast of de frustratie achter die verhalen\n- Beurt 6-7: wat ze willen achterlaten of veranderen; zoek de rode draad\n- Beurt 8: spiegelen — benoem een patroon dat je ziet en vraag of het klopt\n- Beurt 9-'+MAX+': samen toewerken naar de kern; sluit ALLEEN af als je iets concreets en persoonlijks hebt\n\nNA '+MAX+' BEURTEN: antwoord met alleen de tekst KLAAR en niets anders.\n\n'+openings[mode];
 }
 
 function buildDots(){
@@ -320,8 +342,8 @@ async function gen(){
   document.getElementById('s-chat').style.display='none';
   document.getElementById('s-load').style.display='block';
   var tr=hist.map(function(m){return(m.role==='coach'?'Coach':'Gebruiker')+': '+m.content}).join('\n\n');
-  var doorInstr=door?'\n5. how: Hoe brengt deze persoon of dit team de Why in de praktijk? (2-3 zinnen, concreet gedrag)\n6. wat: Wat doen ze concreet als bewijs van de Why? (1-2 zinnen)':'';
-  var prompt='Je bent een coach die de kern van een gesprek destilleert.\n\nLet op patronen: wat herhaalt zich? Wat laadde op? Waar werd het emotioneel? Wat zat er tussendoor?\nDe kern gaat nooit over geld — het is de diepste drijfveer, de bijdrage aan anderen.\n\nFormuleer de kern als: "Om [bijdrage] zodat [impact]"\n\nGesprek:\n'+tr+'\n\nGenereer:\n1. why: De kern-statement (max 2 zinnen, ik-vorm of wij-vorm voor team, emotioneel en authentiek, structuur: "Om... zodat...")\n2. why_kort: De kern in 1 krachtige zin\n3. patroon: Wat jij als coach zag in het gesprek — de patronen die de kern onthulden (2-3 zinnen, schrijf als coach tegen de gebruiker, gebruik "jij" of "jullie")\n4. drive: Wat deze persoon of dit team echt drijft (1 zin)\n5. erfenis: Wat ze willen achterlaten of veranderen (1 zin)'+doorInstr+'\n\nREAGEER ALLEEN in JSON:\n{"why":"...","why_kort":"...","patroon":"...","drive":"...","erfenis":"..."'+(door?',"how":"...","wat":"..."':'')+'}';
+  var doorInstr='\n5. how: Hoe brengt deze persoon of dit team de Why in de praktijk? (1 zin, concreet gedrag — geen abstracte taal)\n6. wat: Wat doen ze concreet als bewijs van de Why? (1 zin, iets tastbaars)';
+  var prompt='Je bent een coach die de kern van een gesprek destilleert tot iets wat de persoon direct herkent als van zichzelf.\n\nREGELS:\n- Gebruik ALLEEN wat er in het gesprek gezegd is — vul niets in wat niet gezegd is\n- De Why gaat nooit over geld, groei of succes — het is de diepste bijdrage aan anderen\n- Wees zo concreet en specifiek dat alleen deze persoon dit geschreven zou kunnen hebben\n- Geen bloemrijke, algemene of inspirerende taal — liever scherp en herkenbaar\n- Structuur: "Om [concrete bijdrage] zodat [echte impact]"\n- Maximaal 2 korte zinnen voor de Why — liever 1\n\nLet op: wat herhaalt zich? Wat laadde op? Waar werd het emotioneel? Wat zat er tussendoor?\n\nGesprek:\n'+tr+'\n\nGenereer:\n1. why: De kern in 1-2 korte, concrete zinnen (ik-vorm of wij-vorm, structuur: "Om... zodat...")\n2. why_kort: De essentie in maximaal 7 woorden — geen bijzinnen, geen uitleg\n3. patroon: Wat jij als coach zag — de patronen die de kern onthulden (2-3 zinnen, schrijf als coach tegen de gebruiker, gebruik "jij" of "jullie", wees specifiek over wat je hoorde)\n4. drive: Wat deze persoon of dit team echt drijft (1 korte zin)\n5. erfenis: Wat ze willen achterlaten of veranderen (1 korte zin)'+doorInstr+'\n\nREAGEER ALLEEN in JSON:\n{"why":"...","why_kort":"...","patroon":"...","drive":"...","erfenis":"...","how":"...","wat":"..."}';
 
   try{
     var resp=await fetch('/api/chat',{
@@ -343,12 +365,10 @@ function showRes(r){
   document.getElementById('r-pat').textContent=r.patroon;
   document.getElementById('r-drv').textContent=r.drive;
   document.getElementById('r-leg').textContent=r.erfenis;
-  if(door&&r.how&&r.wat){
-    document.getElementById('circle-grid').style.display='grid';
-    document.getElementById('r-ws').textContent=r.why_kort;
-    document.getElementById('r-how').textContent=r.how;
-    document.getElementById('r-wat').textContent=r.wat;
-  }
+  document.getElementById('circle-grid').style.display='grid';
+  document.getElementById('r-ws').textContent=r.why_kort;
+  document.getElementById('r-how').textContent=r.how||'';
+  document.getElementById('r-wat').textContent=r.wat||'';
   window._R=r;
 }
 
@@ -369,7 +389,7 @@ function editWhy(){
 function dl(){
   var r=window._R;if(!r)return;
   var tr=hist.map(function(m){return(m.role==='coach'?'Coach':'Jij')+': '+m.content}).join('\n\n');
-  var extra=door&&r.how?'\nHOE\n'+r.how+'\n\nWAT\n'+r.wat:'';
+  var extra=r.how?'\nHOE\n'+r.how+'\n\nWAT\n'+(r.wat||''):'';
   var txt='JOUW WHY-RAPPORT\n'+'='.repeat(40)+'\n\nJOUW WHY\n'+r.why+'\n\nWAT DE COACH ZAG\n'+r.patroon+'\n\nWAT JOU DRIJFT\n'+r.drive+'\n\nWAT JE WILT ACHTERLATEN\n'+r.erfenis+extra+'\n\n'+'='.repeat(40)+'\nHET GESPREK\n\n'+tr;
   var b=new Blob([txt],{type:'text/plain;charset=utf-8'});
   var u=URL.createObjectURL(b);
